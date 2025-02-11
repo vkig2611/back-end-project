@@ -34,28 +34,19 @@ jobs:
             exit 0
           fi
 
-      - name: Upload ZIP to GitHub Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: bru_collection
-          path: ${{ env.ZIP_NAME }}
-
-      - name: Send Slack Notification with Artifact Link
+      - name: Upload ZIP to Slack
         shell: bash
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL:  ${{ secrets.SLACK_CHANNEL }}
         run: |
-          ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          
-          curl -X POST -H "Content-Type: application/json" \
-               --data '{
-                 "text": "📢 *New API Test Collection Available!* The latest .bru files have been zipped and can be downloaded from GitHub Actions.",
-                 "attachments": [
-                   {
-                     "fallback": "Download the latest .bru files",
-                     "color": "#36a64f",
-                     "title": "Download ZIP",
-                     "title_link": "'"$ARTIFACT_URL"'"
-                   }
-                 ]
-               }' $SLACK_WEBHOOK_URL
+          if [ -f "$ZIP_NAME" ]; then
+            curl -F file=@"$ZIP_NAME" \
+                 -F "channels=$SLACK_CHANNEL" \
+                 -F "initial_comment=📢 *New API Test Collection Available!* The latest .bru files are attached." \
+                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                 https://slack.com/api/files.upload
+          else
+            echo "No ZIP file to upload."
+            exit 1
+          fi
