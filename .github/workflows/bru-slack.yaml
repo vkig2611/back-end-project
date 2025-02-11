@@ -1,5 +1,6 @@
 ---
 name: Zip and Upload .bru Files to Slack
+
 on:
   pull_request:
     types:
@@ -7,13 +8,16 @@ on:
   push:
     branches:
       - master
+
 jobs:
   zip-and-upload:
     if: github.event.pull_request.merged == true || github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Find and Zip .bru Files
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
@@ -22,23 +26,27 @@ jobs:
           find . -name "*.bru" -exec cp {} zip_output/ \;
           zip -r "$ZIP_NAME" zip_output/
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
       - name: Upload ZIP to Slack
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-        run: >
+        run: |
           curl -F file=@"$ZIP_NAME" \
-               -F "channels=${C086TFFEVTLD}" \
+               -F "channels=${SLACK_CHANNEL_ID}" \
                -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+               -H "Content-Type: multipart/form-data" \
                -F "initial_comment=📢 *New API Test Collection Available!* The latest .bru files are uploaded." \
                https://slack.com/api/files.upload
+
       - name: Send Slack Notification
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL_ID: ${{ secrets.C086TFFEVTL }}
-        run: >
-          curl -X POST -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" -H
-          'Content-type: application/json' --data '{
-            "channel": "'${SLACK_CHANNEL_ID}'",
-            "text": "✅ *API Test Collection Uploaded!* 🎉\nThe latest .bru files have been zipped and uploaded to Slack."
-          }' https://slack.com/api/chat.postMessage
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+        run: |
+          curl -X POST -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+               -H "Content-type: application/json" \
+               --data '{
+                 "channel": "'"${SLACK_CHANNEL_ID}"'",
+                 "text": "✅ *API Test Collection Uploaded!* 🎉\nThe latest .bru files have been zipped and uploaded to Slack."
+               }' https://slack.com/api/chat.postMessage
