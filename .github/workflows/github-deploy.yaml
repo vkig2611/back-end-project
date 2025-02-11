@@ -14,10 +14,20 @@ jobs:
 
       - name: Find and zip .bru files
         run: |
-          zip -r bru-collections.zip $(find . -type f -name "*.bru")
+          FILES=$(find . -type f -name "*.bru")
+          if [ -z "$FILES" ]; then
+            echo "No .bru files found!"
+            exit 1
+          fi
+          zip -r bru-collections.zip $FILES
 
       - name: Verify zip file
-        run: ls -lh bru-collections.zip  # ✅ Ensure file exists
+        run: |
+          if [ ! -s bru-collections.zip ]; then
+            echo "bru-collections.zip is empty!"
+            exit 1
+          fi
+          ls -lh bru-collections.zip
 
       - name: Upload zip as artifact (optional)
         uses: actions/upload-artifact@v4
@@ -27,7 +37,12 @@ jobs:
           if-no-files-found: error
 
       - name: Debug Slack Token
-        run: echo "SLACK_BOT_TOKEN length: ${#SLACK_BOT_TOKEN}"
+        run: |
+          if [ -z "${SLACK_BOT_TOKEN}" ]; then
+            echo "SLACK_BOT_TOKEN is missing!"
+            exit 1
+          fi
+          echo "SLACK_BOT_TOKEN is set and has ${#SLACK_BOT_TOKEN} characters."
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
