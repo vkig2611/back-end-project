@@ -28,14 +28,14 @@ jobs:
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         run: >
           curl -F file=@"$ZIP_NAME" \
-               -F "channels=${SLACK_CHANNEL_ID}" \
+               -F "channels=${C086TFFEVTLD}" \
                -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
                -F "initial_comment=📢 *New API Test Collection Available!* The latest .bru files are uploaded." \
                https://slack.com/api/files.upload
       - name: Send Slack Notification
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_CHANNEL_ID: ${{ secrets.C086TFFEVTL }}
         run: >
           curl -X POST -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" -H
           'Content-type: application/json' --data '{
