@@ -22,33 +22,33 @@ jobs:
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           ZIP_NAME="bru_collection_${TIMESTAMP}.zip"
+
           mkdir -p zip_output
           find . -name "*.bru" -exec cp {} zip_output/ \;
-          zip -r "$ZIP_NAME" zip_output/
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
 
-      - name: Upload ZIP to Slack
+          if [ "$(ls -A zip_output)" ]; then
+            zip -r "$ZIP_NAME" zip_output/
+            echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          else
+            echo "No .bru files found, skipping ZIP creation."
+            exit 0
+          fi
+
+      - name: Upload ZIP to Slack via Webhook
+        if: env.ZIP_NAME != ''
         shell: bash
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          curl -X POST -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
-               -H "Content-Type: multipart/form-data" \
-               -F file=@"$ZIP_NAME" \
-               -F "channels=${SLACK_CHANNEL_ID}" \
-               -F "initial_comment=📢 *New API Test Collection Available!* The latest .bru files are uploaded." \
-               https://slack.com/api/files.upload
-
-      - name: Send Slack Notification
-        shell: bash
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-        run: |
-          curl -X POST -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
-               -H "Content-Type: application/json" \
+          curl -X POST -H "Content-Type: application/json" \
                --data '{
-                 "channel": "'"${SLACK_CHANNEL_ID}"'",
-                 "text": "✅ *API Test Collection Uploaded!* 🎉\nThe latest .bru files have been zipped and uploaded to Slack."
-               }' https://slack.com/api/chat.postMessage
+                 "text": "📢 *New API Test Collection Available!* The latest .bru files have been zipped and uploaded.",
+                 "attachments": [
+                   {
+                     "fallback": "Download the latest .bru files",
+                     "color": "#36a64f",
+                     "title": "Download ZIP",
+                     "title_link": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                   }
+                 ]
+               }' $SLACK_WEBHOOK_URL
