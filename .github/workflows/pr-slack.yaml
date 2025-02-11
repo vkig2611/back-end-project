@@ -5,7 +5,7 @@ on:
     branches:
       - master
     types:
-      - merged
+      - closed
 
 jobs:
   zip-and-send-to-slack:
