@@ -51,7 +51,8 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         run: |
           curl -F "file=@bru-collections.zip" \
-               -F "initial_comment=Latest API test collections (.bru) after PR merge" \
                -F "channels=C086TFFEVTL" \
-               -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+               -F "token=$SLACK_BOT_TOKEN" \
+               -F "filename=bru-collections.zip" \
+               -F "title=bru-collections.zip" \
                https://slack.com/api/files.upload
