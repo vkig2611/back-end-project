@@ -38,11 +38,11 @@ jobs:
         if: env.ZIP_NAME != ''
         shell: bash
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL: "#your-channel-name"  # Replace with your Slack channel
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}  # Add this in GitHub Secrets
+          SLACK_CHANNEL_ID: "C086TFFEVTL"  # Replace with your actual Slack Channel ID
         run: |
           curl -F file=@"$ZIP_NAME" \
                -F "initial_comment=📢 *New API Test Collection Available!* The latest .bru files are ready." \
-               -F "channels=$SLACK_CHANNEL" \
+               -F "channels=$SLACK_CHANNEL_ID" \
                -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
                https://slack.com/api/files.upload
