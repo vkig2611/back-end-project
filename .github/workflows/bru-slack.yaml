@@ -34,21 +34,15 @@ jobs:
             exit 0
           fi
 
-      - name: Upload ZIP to Slack via Webhook
+      - name: Upload ZIP to Slack
         if: env.ZIP_NAME != ''
         shell: bash
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: "#your-channel-name"  # Replace with your Slack channel
         run: |
-          curl -X POST -H "Content-Type: application/json" \
-               --data '{
-                 "text": "📢 *New API Test Collection Available!* The latest .bru files have been zipped and uploaded.",
-                 "attachments": [
-                   {
-                     "fallback": "Download the latest .bru files",
-                     "color": "#36a64f",
-                     "title": "Download ZIP",
-                     "title_link": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                   }
-                 ]
-               }' $SLACK_WEBHOOK_URL
+          curl -F file=@"$ZIP_NAME" \
+               -F "initial_comment=📢 *New API Test Collection Available!* The latest .bru files are ready." \
+               -F "channels=$SLACK_CHANNEL" \
+               -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+               https://slack.com/api/files.upload
