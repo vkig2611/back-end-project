@@ -3,7 +3,7 @@ name: Zip and Upload .bru files to Slack
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   zip-and-send:
