@@ -1,0 +1,39 @@
+name: Zip and Send BRU File to Slack
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  zip-and-upload:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Zip the BRU Collection
+        run: |
+          zip -r bru_collection.zip collection.bru
+
+      - name: Upload Zip as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bru_collection
+          path: bru_collection.zip
+
+      - name: Send Notification to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data '{
+            "text": "🚀 A new API test collection is available!",
+            "attachments": [
+              {
+                "title": "Download bru_collection.zip",
+                "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              }
+            ]
+          }' $SLACK_WEBHOOK_URL
