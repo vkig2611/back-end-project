@@ -3,31 +3,33 @@ name: Zip and Upload .bru files to Slack
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   zip-and-send:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to latest stable version
 
       - name: Find and zip .bru files
         run: |
           zip -r bru-collections.zip $(find . -type f -name "*.bru")
 
       - name: Upload zip as artifact (optional)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Updated from v3 to v4
         with:
           name: bru-collections
           path: bru-collections.zip
+          if-no-files-found: error  # Fails if no .bru files are found
 
       - name: Send zip to Slack
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}  # Ensure token is set
         run: |
           curl -F "file=@bru-collections.zip" \
                -F "initial_comment=Latest API test collections (.bru) after PR merge" \
                -F "channels=#your-slack-channel" \
-               -H "Authorization: Bearer ${{ secrets.SLACK_BOT_TOKEN }}" \
+               -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
                https://slack.com/api/files.upload
