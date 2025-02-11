@@ -35,7 +35,7 @@ jobs:
           fi
 
       - name: Upload ZIP to GitHub Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # ✅ Updated version
         with:
           name: bru_collection
           path: ${{ env.ZIP_NAME }}
